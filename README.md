@@ -73,6 +73,8 @@ The MySQL users and their privileges. A user has the values `name`, `host` (defa
     mysql_port: "3306"
     mysql_bind_address: '0.0.0.0'
     mysql_datadir: /var/lib/mysql
+    mysql_logdir: /var/log/mysql
+    mysql_binary_path: /usr/bin/mysql
     mysql_socket: *default value depends on OS*
     mysql_pid_file: *default value depends on OS*
 
