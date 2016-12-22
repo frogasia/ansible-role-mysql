@@ -4,7 +4,7 @@
   register: mysql_cli_version
   changed_when: false
   args:
-      executable: {{ mysql_binary_path }}
+      executable: "{{ mysql_binary_path }}"
 
 - name: Ensure default user is present.
   mysql_user:
@@ -30,7 +30,7 @@
     - DELETE FROM mysql.user WHERE User='{{ mysql_root_username }}' AND Host NOT IN ('localhost', '127.0.0.1', '::1')
   changed_when: false
   args:
-      executable: {{ mysql_binary_path }}
+      executable: "{{ mysql_binary_path }}"
 
 - name: Get list of hosts for the root user.
   command: mysql -NBe "SELECT Host FROM mysql.user WHERE User = '{{ mysql_root_username }}' ORDER BY (Host='localhost') ASC"
@@ -38,7 +38,7 @@
   changed_when: false
   always_run: true
   args:
-      executable: {{ mysql_binary_path }}
+      executable: "{{ mysql_binary_path }}"
   when: mysql_install_packages | bool or mysql_root_password_update
 
 # Note: We do not use mysql_user for this operation, as it doesn't always update
@@ -50,7 +50,7 @@
     'ALTER USER "{{ mysql_root_username }}"@"{{ item }}" IDENTIFIED WITH mysql_native_password BY "{{ mysql_root_password }}";'
   with_items: "{{ mysql_root_hosts.stdout_lines|default([]) }}"
   args:
-      executable: {{ mysql_binary_path }}
+      executable: "{{ mysql_binary_path }}"
   when: ((mysql_install_packages | bool) or mysql_root_password_update) and ('5.7.' in mysql_cli_version.stdout)
 
 # Set root password for MySQL < 5.7.x.
@@ -60,7 +60,7 @@
     'SET PASSWORD FOR "{{ mysql_root_username }}"@"{{ item }}" = PASSWORD("{{ mysql_root_password }}");'
   with_items: "{{ mysql_root_hosts.stdout_lines|default([]) }}"
   args:
-      executable: {{ mysql_binary_path }}
+      executable: "{{ mysql_binary_path }}"
   when: ((mysql_install_packages | bool) or mysql_root_password_update) and ('5.7.' not in mysql_cli_version.stdout)
 
 # Has to be after the root password assignment, for idempotency.
@@ -79,7 +79,7 @@
   changed_when: false
   always_run: true
   args:
-      executable: {{ mysql_binary_path }}
+      executable: "{{ mysql_binary_path }}"
 
 - name: Remove anonymous MySQL users.
   mysql_user:
