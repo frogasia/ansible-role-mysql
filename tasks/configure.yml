@@ -1,4 +1,12 @@
 ---
+- name: Get MySQL version.
+  command: 'mysql --version'
+  register: mysql_cli_version
+  changed_when: false
+  check_mode: false
+  args:
+      executable: "{{ mysql_binary_path }}"
+
 - name: Copy my.cnf global MySQL configuration.
   template:
     src: my.cnf.j2
@@ -30,13 +38,10 @@
   notify: restart mysql
 
 - name: Create slow query log file (if configured).
-  file:
-    path: "{{ mysql_slow_query_log_file }}"
-    state: touch
-    owner: mysql
-    group: mysql
-    mode:  0755
-    setype: mysqld_db_t
+  command: "touch {{ mysql_slow_query_log_file }}"
+  args:
+    creates: "{{ mysql_slow_query_log_file }}"
+    warn: false
   when: mysql_slow_query_log_enabled
 
 - name: Create datadir if it does not exist
@@ -45,7 +50,7 @@
     state: directory
     owner: mysql
     group: mysql
-    mode:  0755
+    mode: 0755
     setype: mysqld_db_t
 
 - name: Set ownership on slow query log file (if configured).
@@ -53,28 +58,31 @@
     path: "{{ mysql_slow_query_log_file }}"
     state: file
     owner: mysql
-    group: mysql
+    group: "{{ mysql_log_file_group }}"
     mode: 0640
   when: mysql_slow_query_log_enabled
 
 - name: Create error log file (if configured).
-  file:
-    path: "{{ mysql_log_error }}"
-    state: touch
-    owner: mysql
-    group: mysql
-    mode:  0755
-    setype: mysqld_db_t
-  when: mysql_log == "" and mysql_log_error != ""
+  command: "touch {{ mysql_log_error }}"
+  args:
+    creates: "{{ mysql_log_error }}"
+    warn: false
+  when:
+    - mysql_log | default(true)
+    - mysql_log_error | default(false)
+  tags: ['skip_ansible_galaxy']
 
 - name: Set ownership on error log file (if configured).
   file:
     path: "{{ mysql_log_error }}"
     state: file
     owner: mysql
-    group: mysql
+    group: "{{ mysql_log_file_group }}"
     mode: 0640
-  when: mysql_log == "" and mysql_log_error != ""
+  when:
+    - mysql_log | default(true)
+    - mysql_log_error | default(false)
+  tags: ['skip_ansible_galaxy']
 
 - name: Ensure MySQL is started and enabled on boot.
   service: "name={{ mysql_daemon }} state=started enabled={{ mysql_enabled_on_startup }}"
